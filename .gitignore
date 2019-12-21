@@ -1,0 +1,12 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.log
+
+*.test
+
+*.out
+
+*.DS_Store
