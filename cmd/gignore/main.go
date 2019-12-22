@@ -2,26 +2,31 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
-	"github.com/rs/zerolog"
+	"github.com/avevlad/gignore/internal/logger"
 	"github.com/rs/zerolog/log"
 )
 
+func testLog() {
+	fmt.Println("run test log")
+	log.Debug().Msg("dbg22222")
+}
+
 func runFZF(input []string) string {
 	bufOut := new(bytes.Buffer)
-	cmd := exec.Command("sh", "-c", "fzf")
+	cmd := exec.Command("s2h", "-c", "fzf")
 
 	cmd.Stdin = strings.NewReader(strings.Join(input, "\n"))
 	cmd.Stdout = bufOut
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("runFZF")
 	}
 
 	fmt.Println(strings.TrimSpace(string(bufOut.Bytes())) == "bar")
@@ -31,24 +36,11 @@ func runFZF(input []string) string {
 
 func main() {
 	debug := flag.Bool("debug", false, "sets log level to debug")
-	flag := os.O_CREATE | os.O_APPEND | os.O_WRONLY
-	file, err := os.OpenFile("./"+AppName+".log", flag, 0644)
-	if err != nil {
-		// TODO: ...
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-	}
-	defer func() {
-		if file != nil {
-			_ = file.Close()
-		}
-	}()
-	if err == nil {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: file, NoColor: true, TimeFormat: time.RFC3339})
-	}
+	logger.InitLogger()
+	log.Debug().Bool("debug", *debug).Send()
+	testLog()
+	customErr := errors.New("custom fatal error")
 
-	log.Debug().
-		Bool("debug", *debug).
-		Msg("Hello World")
-
-	runFZF([]string{"foo", "bar", "fzf"})
+	// utils.RemoveDuplicateStr([]string{})
+	log.Fatal().Err(customErr).Msg("fatal msg")
 }
