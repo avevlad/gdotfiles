@@ -15,5 +15,9 @@ test-common: test vet
 test:
 	go test ./internal/...
 
+run:
+	./bin/gdotfiles -h
+	./bin/gdotfiles -v
+
 vet:
 	go vet ./cmd/... ./internal/...
