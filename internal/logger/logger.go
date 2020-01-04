@@ -10,6 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type ConsoleLoggerOpts struct {
+	Level zerolog.Level
+}
+
 type CustomWriter struct {
 	lw    zerolog.LevelWriter
 	level zerolog.Level
@@ -27,7 +31,7 @@ func (w *CustomWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err err
 }
 
 // TODO: config
-func InitLogger() {
+func InitLogger(opts *ConsoleLoggerOpts) {
 	filename := "./" + constants.AppName + ".log"
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -37,7 +41,7 @@ func InitLogger() {
 		Out:        os.Stdout,
 		TimeFormat: time.Kitchen,
 	})
-	customWriter := &CustomWriter{consoleWriter, zerolog.FatalLevel}
+	customWriter := &CustomWriter{consoleWriter, opts.Level}
 	mw := zerolog.MultiLevelWriter(
 		zerolog.ConsoleWriter{
 			Out:        file,

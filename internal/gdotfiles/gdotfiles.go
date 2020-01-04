@@ -9,22 +9,60 @@ import (
 	"strings"
 
 	"github.com/avevlad/gdotfiles/internal/build"
+	"github.com/avevlad/gdotfiles/internal/config"
 	"github.com/avevlad/gdotfiles/internal/constants"
+	"github.com/avevlad/gdotfiles/internal/logger"
 
 	"github.com/avevlad/gdotfiles/internal/utils"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-func Run() error {
-	parseOsArgs()
-	parseFlags()
+type appFlags struct {
+	Name    string
+	Type    string
+	From    string
+	Verbose bool
+}
 
-	fmt.Println("Run app")
+func (af *appFlags) registerFlags(fs *flag.FlagSet) {
+	fs.StringVar(&af.Name, "name", "", "")
+	fs.StringVar(&af.Type, "type", "gitignore", "")
+	fs.StringVar(&af.From, "from", "github", "")
+	fs.BoolVar(&af.Verbose, "verbose", false, "")
+
+	fs.Usage = func() {
+		// print(helpText())
+	}
+}
+
+func Run() error {
+	var (
+		cfg      = config.NewConfig()
+		appFlags appFlags
+	)
+
 	setupDataDirs()
-	println("----")
+	cfg.Sync()
+
+	fmt.Println(cfg)
+
+	verbose := buildRestFlags()
+	var logLevel = zerolog.FatalLevel
+
+	if verbose {
+		logLevel = zerolog.DebugLevel
+	}
+	logger.InitLogger(&logger.ConsoleLoggerOpts{Level: logLevel})
+
+	log.Debug().Msg("some msg")
+	log.Info().Strs("version", []string{build.Version, build.Revision}).Send()
+
+	appFlags.registerFlags(flag.CommandLine)
+	flag.Parse()
+
 	println(build.Revision)
 	println(build.Version)
-	println("----")
 
 	fmt.Println("CheckFzfExist", utils.CheckFzfExist())
 	fmt.Println("CheckGitExist", utils.CheckGitExist())
@@ -42,9 +80,9 @@ func runFZF(input []string) string {
 		log.Fatal().Err(err).Msg("runFZF")
 	}
 
-	fmt.Println(strings.TrimSpace(string(bufOut.Bytes())) == "bar")
+	fmt.Println(strings.TrimSpace(bufOut.String()) == "bar")
 
-	return string(bufOut.Bytes())
+	return bufOut.String()
 }
 
 func setupDataDirs() {
@@ -52,9 +90,12 @@ func setupDataDirs() {
 	if err := utils.MakeDirIfNotExists(appDir); err != nil {
 		log.Fatal().Err(err).Msg("setupDataDirs")
 	}
+	if err := utils.MakeDirIfNotExists(utils.GetCustomGitFilesFolderPath()); err != nil {
+		log.Fatal().Err(err).Msg("setupDataDirs custom folder")
+	}
 }
 
-func parseOsArgs() {
+func buildRestFlags() (hasVerbose bool) {
 	osArgs := os.Args[1:]
 
 	for _, arg := range osArgs {
@@ -62,6 +103,8 @@ func parseOsArgs() {
 		case strings.HasPrefix(arg, "--flag="):
 			flagVal := arg[len("--flag="):]
 			fmt.Println("flagVal", flagVal)
+		case arg == "--verbose":
+			hasVerbose = true
 		case arg == "--version", arg == "version", arg == "-v":
 			fmt.Printf("%s\n", build.Version+" ("+build.Revision+")")
 			os.Exit(0)
@@ -71,26 +114,8 @@ func parseOsArgs() {
 		default:
 		}
 	}
-}
 
-func parseFlags() {
-	opts := struct {
-		Name string
-		Type string
-		From string
-	}{}
-
-	flag.StringVar(&opts.Name, "name", "", "")
-	flag.StringVar(&opts.Type, "type", "gitignore", "")
-	flag.StringVar(&opts.From, "from", "github", "")
-
-	flag.Usage = func() {
-		// print(helpText())
-	}
-
-	flag.Parse()
-	fmt.Println("opts", opts)
-	fmt.Println("tail:", flag.Args())
+	return hasVerbose
 }
 
 var helpText = func() string {
@@ -102,7 +127,7 @@ Options:
 	--name=...        Name of template (Node | Scala | Symfony | 1C-Bitrix...)
 	--type=...        Type of git file (ignore | attributes, default ignore)
 	--from=...        Source (github | toptal | local | alexkaratarakis, default
-										github or alexkaratarakis)
+	                  github or alexkaratarakis)
 
 Examples:
 	# Automatic detect project language and choice .gitignore from several options (depends on fzf)
