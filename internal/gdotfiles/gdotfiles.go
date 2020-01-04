@@ -129,10 +129,10 @@ func downloadRepos(cfg config.Config) {
 
 	for i, v := range reposList {
 		wg.Add(1)
-		go func(url string) {
+		go func(url string, index int) {
 			defer wg.Done()
 
-			folder := reposFolders[i]
+			folder := reposFolders[index]
 			fmt.Println("Start cloning", url, "in", folder)
 
 			log.Debug().Str("folder", folder).Msg("download start")
@@ -146,7 +146,7 @@ func downloadRepos(cfg config.Config) {
 				errChan <- err
 			}
 			log.Debug().Str("folder", folder).Str("resp", string(resp)).Msg("download finish")
-		}(v)
+		}(v, i)
 	}
 
 	go func() {
