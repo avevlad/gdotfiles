@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"strings"
 
+	"github.com/avevlad/gdotfiles/internal/constants"
 	"github.com/avevlad/gdotfiles/internal/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -46,4 +48,29 @@ func (c *Config) Sync() {
 	if err := json.Unmarshal(data, &c); err != nil {
 		log.Fatal().Err(err).Msg("unmarshal cfg file")
 	}
+}
+
+func (c Config) GetReposUrls() []string {
+	return []string{
+		c.GithubIgnoreGitUrl,
+		c.ToptalIgnoreGitUrl,
+		c.GitattributeGitUrl,
+	}
+}
+
+func (c Config) GetReposFolders() (folders []string) {
+	for _, url := range c.GetReposUrls() {
+		split := strings.Split(url, "/")
+		folder := strings.Join(split[len(split)-2:], "_")
+		folders = append(folders, folder)
+	}
+
+	return folders
+}
+
+func (c Config) GetReposFoldersWithCustomFolder() (folders []string) {
+	folders = append(folders, c.GetReposFolders()...)
+	folders = append(folders, constants.CustomFolder)
+
+	return folders
 }

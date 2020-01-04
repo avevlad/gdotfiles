@@ -41,13 +41,12 @@ func (af *appFlags) registerFlags(fs *flag.FlagSet) {
 func Run() error {
 	var (
 		cfg      = config.NewConfig()
+		files    Files
 		appFlags appFlags
 	)
 
 	setupDataDirs()
 	cfg.Sync()
-
-	fmt.Println(cfg)
 
 	verbose := buildRestFlags()
 	var logLevel = zerolog.FatalLevel
@@ -70,14 +69,29 @@ func Run() error {
 	fmt.Println("CheckGitExist", utils.CheckGitExist())
 
 	downloadRepos(*cfg)
+	files.Read(*cfg)
+
+	input := []string{}
+
+	for _, v := range files.list {
+		fmt.Println(v)
+		len := len(v.name)
+		left := v.name + files.nameMaxTpl[len-1:]
+
+		input = append(input, left+" ["+v.folder+"]")
+	}
+
+	// runFZF(input)
 
 	fmt.Println("FINISH")
 	return nil
 }
 
 func runFZF(input []string) string {
-	bufOut := new(bytes.Buffer)
-	cmd := exec.Command("sh", "-c", "fzf")
+	var (
+		bufOut = new(bytes.Buffer)
+		cmd    = exec.Command("sh", "-c", "fzf")
+	)
 
 	cmd.Stdin = strings.NewReader(strings.Join(input, "\n"))
 	cmd.Stdout = bufOut
@@ -109,20 +123,16 @@ func downloadRepos(cfg config.Config) {
 
 	errChan := make(chan error)
 	wg := sync.WaitGroup{}
-	reposList := []string{
-		cfg.GithubIgnoreGitUrl,
-		cfg.ToptalIgnoreGitUrl,
-		cfg.GitattributeGitUrl,
-	}
+	reposList := cfg.GetReposUrls()
+	reposFolders := cfg.GetReposFolders()
 	fmt.Println("This is the first run, we need some time to clone and cache gitignore and gitattribute files")
 
-	for _, v := range reposList {
+	for i, v := range reposList {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
 
-			split := strings.Split(url, "/")
-			folder := strings.Join(split[len(split)-2:], "_")
+			folder := reposFolders[i]
 			fmt.Println("Start cloning", url, "in", folder)
 
 			log.Debug().Str("folder", folder).Msg("download start")

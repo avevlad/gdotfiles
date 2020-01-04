@@ -19,7 +19,7 @@ func UserConfigDir() string {
 }
 
 func GetCustomGitFilesFolderPath() string {
-	return filepath.Join(UserConfigDir(), "custom-git-files-path")
+	return filepath.Join(UserConfigDir(), constants.CustomFolder)
 }
 
 func GetConfigPath() string {
