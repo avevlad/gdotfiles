@@ -1,4 +1,4 @@
-package gignore
+package gdotfiles
 
 type Git struct {
 	url string

@@ -1,9 +1,10 @@
 package logger
 
 import (
-	"github.com/avevlad/gignore/internal/constants"
 	"os"
 	"time"
+
+	"github.com/avevlad/gdotfiles/internal/constants"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

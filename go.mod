@@ -1,4 +1,4 @@
-module github.com/avevlad/gignore
+module github.com/avevlad/gdotfiles
 
 go 1.13
 

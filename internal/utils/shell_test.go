@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/avevlad/gignore/internal/test/assert"
+	"github.com/avevlad/gdotfiles/internal/test/assert"
 )
 
 func TestRealGit(t *testing.T) {

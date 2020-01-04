@@ -1,4 +1,6 @@
 package build
 
-var Revision = ""
-var Version = ""
+var (
+	Version  = ""
+	Revision = ""
+)

@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/avevlad/gignore/internal/gignore"
+	"github.com/avevlad/gdotfiles/internal/gdotfiles"
 )
 
 func main() {
-	err := gignore.Run()
+	err := gdotfiles.Run()
 	if err != nil {
 		os.Exit(1)
 	}

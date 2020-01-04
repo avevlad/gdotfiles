@@ -1,3 +1,3 @@
 package constants
 
-var AppName = "gignore"
+var AppName = "gdotfiles"

@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/avevlad/gignore/internal/constants"
+	"github.com/avevlad/gdotfiles/internal/constants"
 	"github.com/rs/zerolog/log"
 )
 

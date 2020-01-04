@@ -1,4 +1,4 @@
-package gignore
+package gdotfiles
 
 type Files struct {
 }
