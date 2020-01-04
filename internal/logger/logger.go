@@ -1,10 +1,10 @@
 package logger
 
 import (
+	"github.com/avevlad/gignore/internal/constants"
 	"os"
 	"time"
 
-	"github.com/avevlad/gignore/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -27,7 +27,7 @@ func (w *CustomWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err err
 
 // TODO: config
 func InitLogger() {
-	filename := "./" + utils.AppName + ".log"
+	filename := "./" + constants.AppName + ".log"
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal().Err(err).Msg("open log file err")

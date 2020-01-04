@@ -3,6 +3,7 @@ package gignore
 import (
 	"bytes"
 	"fmt"
+	"github.com/avevlad/gignore/internal/build"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,6 +14,12 @@ import (
 
 func Run() error {
 	fmt.Println("Run app")
+	setupDataDirs()
+	println("----")
+	println(build.Revision)
+	println(build.Version)
+	println("----")
+
 	fmt.Println("CheckFzfExist", utils.CheckFzfExist())
 	fmt.Println("CheckGitExist", utils.CheckGitExist())
 	return nil
@@ -32,4 +39,11 @@ func runFZF(input []string) string {
 	fmt.Println(strings.TrimSpace(string(bufOut.Bytes())) == "bar")
 
 	return string(bufOut.Bytes())
+}
+
+func setupDataDirs() {
+	appDir := utils.UserConfigDir()
+	if err := utils.MakeDirIfNotExists(appDir); err != nil {
+		log.Fatal().Err(err).Msg("setupDataDirs")
+	}
 }
