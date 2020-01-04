@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
+	"sync"
 
 	"github.com/avevlad/gdotfiles/internal/build"
 	"github.com/avevlad/gdotfiles/internal/config"
@@ -66,6 +68,10 @@ func Run() error {
 
 	fmt.Println("CheckFzfExist", utils.CheckFzfExist())
 	fmt.Println("CheckGitExist", utils.CheckGitExist())
+
+	downloadRepos(*cfg)
+
+	fmt.Println("FINISH")
 	return nil
 }
 
@@ -92,6 +98,55 @@ func setupDataDirs() {
 	}
 	if err := utils.MakeDirIfNotExists(utils.GetCustomGitFilesFolderPath()); err != nil {
 		log.Fatal().Err(err).Msg("setupDataDirs custom folder")
+	}
+}
+
+func downloadRepos(cfg config.Config) {
+	if _, err := os.Stat(path.Join(utils.UserConfigDir(), "github_gitignore")); !os.IsNotExist(err) {
+		fmt.Println("not the first run")
+		return
+	}
+
+	errChan := make(chan error)
+	wg := sync.WaitGroup{}
+	reposList := []string{
+		cfg.GithubIgnoreGitUrl,
+		cfg.ToptalIgnoreGitUrl,
+		cfg.GitattributeGitUrl,
+	}
+	fmt.Println("This is the first run, we need some time to clone and cache gitignore and gitattribute files")
+
+	for _, v := range reposList {
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+
+			split := strings.Split(url, "/")
+			folder := strings.Join(split[len(split)-2:], "_")
+			fmt.Println("Start cloning", url, "in", folder)
+
+			log.Debug().Str("folder", folder).Msg("download start")
+			cmd := exec.Command(`git`, `clone`, url, folder)
+			cmd.Dir = utils.UserConfigDir()
+			resp, err := cmd.CombinedOutput()
+			if err != nil {
+				if len(resp) > 0 {
+					fmt.Println("err resp:", string(resp))
+				}
+				errChan <- err
+			}
+			log.Debug().Str("folder", folder).Str("resp", string(resp)).Msg("download finish")
+		}(v)
+	}
+
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	err := <-errChan
+	if err != nil {
+		log.Fatal().Err(err).Msg("git clone fatal err")
 	}
 }
 
