@@ -9,6 +9,7 @@ import (
 
 	"github.com/avevlad/gdotfiles/internal/config"
 	"github.com/avevlad/gdotfiles/internal/utils"
+	"github.com/rs/zerolog/log"
 )
 
 type File struct {
@@ -62,4 +63,29 @@ func (fls *Files) Read(cfg config.Config) {
 	}
 
 	fmt.Println("files", len(fls.list))
+}
+
+func (fls *Files) FilterByFlags(flags *AppFlags) (result File) {
+	for _, v := range fls.list {
+		if flags.Type != "" &&
+			strings.Contains(v.name, flags.Name) &&
+			strings.Contains(v.name, flags.Type) {
+			log.Debug().Msg("FilterByFlags first statement (by type)")
+			return result
+		}
+		if flags.From != "" &&
+			strings.Contains(v.name, flags.Name) &&
+			strings.Contains(v.folder, flags.From) {
+			log.Debug().Msg("FilterByFlags second statement (by from)")
+			result = v
+			return result
+		}
+		if flags.From == "" && flags.Type == "" && strings.Contains(v.name, flags.Name) {
+			log.Debug().Msg("FilterByFlags third statement (default)")
+			result = v
+			return result
+		}
+	}
+
+	return result
 }

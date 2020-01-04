@@ -20,17 +20,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type appFlags struct {
+type AppFlags struct {
 	Name    string
 	Type    string
 	From    string
 	Verbose bool
 }
 
-func (af *appFlags) registerFlags(fs *flag.FlagSet) {
+func (af *AppFlags) registerFlags(fs *flag.FlagSet) {
 	fs.StringVar(&af.Name, "name", "", "")
-	fs.StringVar(&af.Type, "type", "gitignore", "")
-	fs.StringVar(&af.From, "from", "github", "")
+	fs.StringVar(&af.Type, "type", "", "")
+	fs.StringVar(&af.From, "from", "", "")
 	fs.BoolVar(&af.Verbose, "verbose", false, "")
 
 	fs.Usage = func() {
@@ -42,7 +42,7 @@ func Run() error {
 	var (
 		cfg      = config.NewConfig()
 		files    Files
-		appFlags appFlags
+		appFlags AppFlags
 	)
 
 	setupDataDirs()
@@ -71,17 +71,21 @@ func Run() error {
 	downloadRepos(*cfg)
 	files.Read(*cfg)
 
+	if appFlags.Name != "" {
+		findByFlags(&appFlags, &files)
+		os.Exit(0)
+	}
 	input := []string{}
 
 	for _, v := range files.list {
-		fmt.Println(v)
+		// fmt.Println(v)
 		len := len(v.name)
 		left := v.name + files.nameMaxTpl[len-1:]
 
 		input = append(input, left+" ["+v.folder+"]")
 	}
 
-	// runFZF(input)
+	runFZF(input)
 
 	fmt.Println("FINISH")
 	return nil
@@ -103,6 +107,19 @@ func runFZF(input []string) string {
 	fmt.Println(strings.TrimSpace(bufOut.String()) == "bar")
 
 	return bufOut.String()
+}
+
+// gdotfiles --name=Scala --from=github
+// gdotfiles --name=C++ --type=attributes
+// gdotfiles --name=Scala
+func findByFlags(appFlags *AppFlags, files *Files) {
+	r := files.FilterByFlags(appFlags)
+	if r == (File{}) {
+		fmt.Println("No files found, try simplifying the arguments")
+		os.Exit(0)
+	}
+	fmt.Println("r", r)
+	fmt.Println("f", appFlags)
 }
 
 func setupDataDirs() {
