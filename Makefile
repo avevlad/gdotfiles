@@ -16,7 +16,7 @@ test:
 	go test ./internal/...
 
 run:
-	./bin/gdotfiles -h
+	./bin/gdotfiles --name=Node
 	./bin/gdotfiles -v
 
 vet:
