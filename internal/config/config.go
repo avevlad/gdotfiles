@@ -63,10 +63,18 @@ func (cfg Config) GetReposFolders() (folders []string) {
 	for _, url := range cfg.GetReposUrls() {
 		split := strings.Split(url, "/")
 		folder := strings.Join(split[len(split)-2:], "_")
-		if strings.Contains(folder, "toptal") {
-			folder = path.Join(folder, "templates")
-		}
 		folders = append(folders, folder)
+	}
+
+	return folders
+}
+
+func (cfg Config) getReposFoldersWithToptalHotfix() (folders []string) {
+	for _, fld := range cfg.GetReposFolders() {
+		if strings.Contains(fld, "toptal") {
+			fld = path.Join(fld, "templates")
+		}
+		folders = append(folders, fld)
 	}
 
 	return folders
@@ -74,7 +82,7 @@ func (cfg Config) GetReposFolders() (folders []string) {
 
 func (cfg Config) GetReposFoldersWithCustomFolder() (folders []string) {
 	folders = append(folders, constants.CustomFolder)
-	folders = append(folders, cfg.GetReposFolders()...)
+	folders = append(folders, cfg.getReposFoldersWithToptalHotfix()...)
 
 	return folders
 }
