@@ -77,12 +77,12 @@ func Run() error {
 	}
 	input := []string{}
 
-	for _, v := range files.list {
+	for _, v := range files.List {
 		// fmt.Println(v)
-		len := len(v.name)
-		left := v.name + files.nameMaxTpl[len-1:]
+		len := len(v.Name)
+		left := v.Name + files.NameMaxTpl[len-1:]
 
-		input = append(input, left+" ["+v.folder+"]")
+		input = append(input, left+" ["+v.Folder+"]")
 	}
 
 	runFZF(input)

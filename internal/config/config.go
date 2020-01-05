@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/avevlad/gdotfiles/internal/constants"
@@ -30,8 +31,8 @@ func NewConfig() *Config {
 	}
 }
 
-func (c *Config) Sync() {
-	content, _ := json.MarshalIndent(c, "", " ")
+func (cfg *Config) Sync() {
+	content, _ := json.MarshalIndent(cfg, "", " ")
 	data, err := ioutil.ReadFile(utils.GetConfigPath())
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -45,32 +46,35 @@ func (c *Config) Sync() {
 		return
 	}
 
-	if err := json.Unmarshal(data, &c); err != nil {
+	if err := json.Unmarshal(data, &cfg); err != nil {
 		log.Fatal().Err(err).Msg("unmarshal cfg file")
 	}
 }
 
-func (c Config) GetReposUrls() []string {
+func (cfg Config) GetReposUrls() []string {
 	return []string{
-		c.GithubIgnoreGitUrl,
-		c.ToptalIgnoreGitUrl,
-		c.GitattributeGitUrl,
+		cfg.GithubIgnoreGitUrl,
+		cfg.ToptalIgnoreGitUrl,
+		cfg.GitattributeGitUrl,
 	}
 }
 
-func (c Config) GetReposFolders() (folders []string) {
-	for _, url := range c.GetReposUrls() {
+func (cfg Config) GetReposFolders() (folders []string) {
+	for _, url := range cfg.GetReposUrls() {
 		split := strings.Split(url, "/")
 		folder := strings.Join(split[len(split)-2:], "_")
+		if strings.Contains(folder, "toptal") {
+			folder = path.Join(folder, "templates")
+		}
 		folders = append(folders, folder)
 	}
 
 	return folders
 }
 
-func (c Config) GetReposFoldersWithCustomFolder() (folders []string) {
-	folders = append(folders, c.GetReposFolders()...)
+func (cfg Config) GetReposFoldersWithCustomFolder() (folders []string) {
 	folders = append(folders, constants.CustomFolder)
+	folders = append(folders, cfg.GetReposFolders()...)
 
 	return folders
 }
