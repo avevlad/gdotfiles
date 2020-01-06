@@ -57,6 +57,9 @@ type AppFlags struct {
 }
 
 func (af *AppFlags) RegisterFlags(fs *flag.FlagSet) {
+	if fs.Lookup("name") != nil {
+		return
+	}
 	fs.StringVar(&af.Name, "name", "", "")
 	fs.StringVar(&af.Type, "type", "", "")
 	fs.StringVar(&af.From, "from", "", "")
@@ -68,8 +71,19 @@ func (af *AppFlags) RegisterFlags(fs *flag.FlagSet) {
 	}
 }
 
+func buildAppFlagsFromFzfResponse(fsfResp string) AppFlags {
+	list := strings.Split(fsfResp, "[")
+	file := strings.TrimSpace(list[0])
+	fileName := strings.Split(file, ".")[0]
+	fileType := strings.Split(file, ".")[1]
+	from := strings.ReplaceAll(list[1], "]", "")
+
+	af := AppFlags{Name: fileName, Type: fileType, From: from}
+
+	return af
+}
+
 func (app *App) Run() error {
-	//func Run() error {
 	var (
 		cfg   = config.NewConfig()
 		files Files
@@ -78,26 +92,17 @@ func (app *App) Run() error {
 	setupDataDirs()
 	cfg.Sync()
 
-	//verbose := app.Verbose
-	fmt.Println("appFlags 2", app.Flags)
-
 	flag.Parse()
-	fmt.Println("appFlags 3", app.Flags)
+
 	var logLevel = zerolog.FatalLevel
 
 	if app.Flags.Verbose {
 		logLevel = zerolog.DebugLevel
 	}
+	//logLevel = zerolog.DebugLevel
 	logger.InitLogger(&logger.ConsoleLoggerOpts{Level: logLevel})
 
-	log.Debug().Msg("some msg")
 	log.Info().Strs("version", []string{build.Version, build.Revision}).Send()
-
-	// println(build.Revision)
-	// println(build.Version)
-
-	// fmt.Println("CheckFzfExist", utils.CheckFzfExist())
-	// fmt.Println("CheckGitExist", utils.CheckGitExist())
 
 	downloadRepos(*cfg)
 	files.Read(*cfg)
@@ -121,9 +126,15 @@ func (app *App) Run() error {
 		interactiveInput = append(interactiveInput, left+" ["+v.Folder+"]")
 	}
 
-	runFZF(interactiveInput)
+	fzfRes := runFZF(interactiveInput)
+	fzfAp := buildAppFlagsFromFzfResponse(fzfRes)
+	r := files.FilterByFlags(&fzfAp)
+	log.Debug().Msgf("find file %s", r)
+	if r == (File{}) {
+		return errNoFilesFound
+	}
+	offerFoundFile(r, app.Flags)
 
-	fmt.Println("FINISH")
 	return nil
 }
 
@@ -138,8 +149,6 @@ func runFZF(input []string) string {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	utils.MustCheckWithLog(err, "fzf error")
-
-	fmt.Println(strings.TrimSpace(bufOut.String()) == "bar")
 
 	return bufOut.String()
 }

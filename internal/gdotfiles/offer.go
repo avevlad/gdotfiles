@@ -53,7 +53,6 @@ func writeGitFile(file File, isAppend bool) {
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	fmt.Println("isAppend", isAppend)
 	writeContent = data
 	if isAppend {
 		currentFile, err := ioutil.ReadFile(currentGitFilePath)
@@ -63,11 +62,7 @@ func writeGitFile(file File, isAppend bool) {
 		writeContent = append(currentFile, []byte("\n\n")...)
 		writeContent = append(writeContent, data...)
 	}
-	// fmt.Println("-----------")
-	// fmt.Println("data")
-	// fmt.Println(string(writeContent))
 	if err := ioutil.WriteFile(currentGitFilePath, writeContent, 0644); err != nil {
 		log.Fatal().Err(err).Msg("write git file err")
 	}
-	// fmt.Println(wd)
 }

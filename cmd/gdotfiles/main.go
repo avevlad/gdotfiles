@@ -3,21 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/avevlad/gdotfiles/internal/build"
 	"github.com/avevlad/gdotfiles/internal/constants"
 	"github.com/rs/zerolog/log"
-	"os"
-	"strings"
 
 	"github.com/avevlad/gdotfiles/internal/gdotfiles"
 )
 
 func main() {
-	//oldArgs := os.Args
 	//defer func() { os.Args = oldArgs }()
 	//os.Args = []string{"???", "--name=FooBar", "--from=gh", "--verbose"}
-	fmt.Println(os.Args)
-	fmt.Println(os.Args[1:])
 
 	buildRestFlags(os.Args[1:])
 

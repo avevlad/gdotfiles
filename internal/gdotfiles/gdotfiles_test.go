@@ -74,6 +74,9 @@ func TestGitAttributes(t *testing.T) {
 	rmGitFiles()
 	os.Args = []string{"???", "--name=C++", "--type=attributes", "--yes", "--verbose"}
 	err := runApp()
+
+	err2 := runApp()
+	fmt.Println(err2)
 	assert.Equal(t, err, nil)
 	content := readGitAttributes()
 	fmt.Println(content)
@@ -88,4 +91,12 @@ func TestFakeFile(t *testing.T) {
 	os.Args = []string{"???", "--name=FakeFile", "--verbose"}
 	err := runApp()
 	assert.Equal(t, err, errNoFilesFound)
+}
+
+func TestBuildAppFlagsFromFzfResponse(t *testing.T) {
+	resp := "Go.gitignore                           [github_gitignore]"
+	af := buildAppFlagsFromFzfResponse(resp)
+	assert.Equal(t, af.Name, "Go")
+	assert.Equal(t, af.Type, "gitignore")
+	assert.Equal(t, af.From, "github_gitignore")
 }
