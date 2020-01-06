@@ -51,7 +51,7 @@ func (cfg *Config) Sync() {
 	}
 }
 
-func (cfg Config) GetReposUrls() []string {
+func (cfg *Config) GetReposUrls() []string {
 	return []string{
 		cfg.GithubIgnoreGitUrl,
 		cfg.ToptalIgnoreGitUrl,
@@ -59,7 +59,7 @@ func (cfg Config) GetReposUrls() []string {
 	}
 }
 
-func (cfg Config) GetReposFolders() (folders []string) {
+func (cfg *Config) GetReposFolders() (folders []string) {
 	for _, url := range cfg.GetReposUrls() {
 		split := strings.Split(url, "/")
 		folder := strings.Join(split[len(split)-2:], "_")
@@ -69,7 +69,7 @@ func (cfg Config) GetReposFolders() (folders []string) {
 	return folders
 }
 
-func (cfg Config) getReposFoldersWithToptalHotfix() (folders []string) {
+func (cfg *Config) getReposFoldersWithToptalHotfix() (folders []string) {
 	for _, fld := range cfg.GetReposFolders() {
 		if strings.Contains(fld, "toptal") {
 			fld = path.Join(fld, "templates")
@@ -80,7 +80,7 @@ func (cfg Config) getReposFoldersWithToptalHotfix() (folders []string) {
 	return folders
 }
 
-func (cfg Config) GetReposFoldersWithCustomFolder() (folders []string) {
+func (cfg *Config) GetReposFoldersWithCustomFolder() (folders []string) {
 	folders = append(folders, constants.CustomFolder)
 	folders = append(folders, cfg.getReposFoldersWithToptalHotfix()...)
 

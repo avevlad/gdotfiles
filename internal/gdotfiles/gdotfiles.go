@@ -12,13 +12,38 @@ import (
 
 	"github.com/avevlad/gdotfiles/internal/build"
 	"github.com/avevlad/gdotfiles/internal/config"
-	"github.com/avevlad/gdotfiles/internal/constants"
 	"github.com/avevlad/gdotfiles/internal/logger"
 
 	"github.com/avevlad/gdotfiles/internal/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+type App struct {
+	Flags *AppFlags
+}
+
+type AppOption func(*App)
+
+func NewApp(opts ...AppOption) *App {
+	var appFlags AppFlags
+	appFlags.RegisterFlags(flag.CommandLine)
+
+	app := &App{}
+	app.Flags = &appFlags
+
+	for _, opt := range opts {
+		opt(app)
+	}
+
+	return app
+}
+
+//func WithVerbose(verbose bool) AppOption {
+//	return func(app *App) {
+//		app.Verbose = verbose
+//	}
+//}
 
 type AppFlags struct {
 	Name    string
@@ -27,40 +52,41 @@ type AppFlags struct {
 	Verbose bool
 }
 
-func (af *AppFlags) registerFlags(fs *flag.FlagSet) {
+func (af *AppFlags) RegisterFlags(fs *flag.FlagSet) {
 	fs.StringVar(&af.Name, "name", "", "")
 	fs.StringVar(&af.Type, "type", "", "")
 	fs.StringVar(&af.From, "from", "", "")
 	fs.BoolVar(&af.Verbose, "verbose", false, "")
 
 	fs.Usage = func() {
-		// print(helpText())
+		// print(HelpText())
 	}
 }
 
-func Run() error {
+func (app *App) Run() error {
+	//func Run() error {
 	var (
-		cfg      = config.NewConfig()
-		files    Files
-		appFlags AppFlags
+		cfg   = config.NewConfig()
+		files Files
 	)
 
 	setupDataDirs()
 	cfg.Sync()
 
-	verbose := buildRestFlags()
+	//verbose := app.Verbose
+	fmt.Println("appFlags 2", app.Flags)
+
+	flag.Parse()
+	fmt.Println("appFlags 3", app.Flags)
 	var logLevel = zerolog.FatalLevel
 
-	if verbose {
+	if app.Flags.Verbose {
 		logLevel = zerolog.DebugLevel
 	}
 	logger.InitLogger(&logger.ConsoleLoggerOpts{Level: logLevel})
 
 	log.Debug().Msg("some msg")
 	log.Info().Strs("version", []string{build.Version, build.Revision}).Send()
-
-	appFlags.registerFlags(flag.CommandLine)
-	flag.Parse()
 
 	// println(build.Revision)
 	// println(build.Version)
@@ -71,8 +97,8 @@ func Run() error {
 	downloadRepos(*cfg)
 	files.Read(*cfg)
 
-	if appFlags.Name != "" {
-		r := files.FilterByFlags(&appFlags)
+	if app.Flags.Name != "" {
+		r := files.FilterByFlags(app.Flags)
 		if r == (File{}) {
 			fmt.Println("No files found, try simplifying the arguments")
 			os.Exit(0)
@@ -90,7 +116,7 @@ func Run() error {
 		interactiveInput = append(interactiveInput, left+" ["+v.Folder+"]")
 	}
 
-	runFZF(interactiveInput)
+	//runFZF(interactiveInput)
 
 	fmt.Println("FINISH")
 	return nil
@@ -105,9 +131,8 @@ func runFZF(input []string) string {
 	cmd.Stdin = strings.NewReader(strings.Join(input, "\n"))
 	cmd.Stdout = bufOut
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		log.Fatal().Err(err).Msg("runFZF")
-	}
+	err := cmd.Run()
+	utils.MustCheckWithLog(err, "fzf error")
 
 	fmt.Println(strings.TrimSpace(bufOut.String()) == "bar")
 
@@ -116,12 +141,11 @@ func runFZF(input []string) string {
 
 func setupDataDirs() {
 	appDir := utils.UserConfigDir()
-	if err := utils.MakeDirIfNotExists(appDir); err != nil {
-		log.Fatal().Err(err).Msg("setupDataDirs")
-	}
-	if err := utils.MakeDirIfNotExists(utils.GetCustomGitFilesFolderPath()); err != nil {
-		log.Fatal().Err(err).Msg("setupDataDirs custom folder")
-	}
+	err := utils.MakeDirIfNotExists(appDir)
+	utils.MustCheckWithLog(err, "setupDataDirs")
+
+	err = utils.MakeDirIfNotExists(utils.GetCustomGitFilesFolderPath())
+	utils.MustCheckWithLog(err, "setupDataDirs custom folder")
 }
 
 func downloadRepos(cfg config.Config) {
@@ -164,56 +188,5 @@ func downloadRepos(cfg config.Config) {
 	}()
 
 	err := <-errChan
-	if err != nil {
-		log.Fatal().Err(err).Msg("git clone fatal err")
-	}
-}
-
-func buildRestFlags() (hasVerbose bool) {
-	osArgs := os.Args[1:]
-
-	for _, arg := range osArgs {
-		switch {
-		case strings.HasPrefix(arg, "--flag="):
-			flagVal := arg[len("--flag="):]
-			fmt.Println("flagVal", flagVal)
-		case arg == "--verbose":
-			hasVerbose = true
-		case arg == "--version", arg == "version", arg == "-v":
-			fmt.Printf("%s\n", build.Version+" ("+build.Revision+")")
-			os.Exit(0)
-		case arg == "-h", arg == "-help", arg == "--help":
-			fmt.Print(helpText())
-			os.Exit(0)
-		default:
-		}
-	}
-
-	return hasVerbose
-}
-
-var helpText = func() string {
-	return `
-Usage:
-	` + constants.AppName + ` [options]
-
-Options:
-	--name=...        Name of template (Node | Scala | Symfony | 1C-Bitrix...)
-	--type=...        Type of git file (ignore | attributes, default ignore)
-	--from=...        Source (github | toptal | local | alexkaratarakis, default
-	                  github or alexkaratarakis)
-
-Examples:
-	# Automatic detect project language and choice .gitignore from several options (depends on fzf)
-	gdotfiles
-
-	# Create Scala .gitignore file from github.com/github/gitignore
-	gdotfiles --name=Scala --from=github
-	
-	# Create C++ .gitattributes file from github.com/alexkaratarakis/gitattributes
-	gdotfiles --name=C++ --type=attributes
-
-	# Create two gitignore templates in one .gitignore file from github.com/github/gitignore
-	gdotfiles --name=Scala
-`
+	utils.MustCheckWithLog(err, "git clone fatal err")
 }

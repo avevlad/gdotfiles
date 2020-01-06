@@ -4,6 +4,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/avevlad/gdotfiles/internal/utils"
+
 	"github.com/avevlad/gdotfiles/internal/constants"
 
 	"github.com/rs/zerolog"
@@ -34,9 +36,8 @@ func (w *CustomWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err err
 func InitLogger(opts *ConsoleLoggerOpts) {
 	filename := "./" + constants.AppName + ".log"
 	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatal().Err(err).Msg("open log file err")
-	}
+	utils.MustCheckWithLog(err, "open log file err")
+
 	consoleWriter := zerolog.MultiLevelWriter(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.Kitchen,

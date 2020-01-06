@@ -10,10 +10,7 @@ import (
 
 func UserConfigDir() string {
 	dir, err := os.UserConfigDir()
-
-	if err != nil {
-		log.Fatal().Err(err).Msg("UserConfigDir is not defined")
-	}
+	MustCheckWithLog(err, "UserConfigDir is not defined")
 
 	return filepath.Join(dir, constants.AppName)
 }
