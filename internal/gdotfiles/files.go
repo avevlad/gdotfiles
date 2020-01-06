@@ -1,6 +1,7 @@
 package gdotfiles
 
 import (
+	"github.com/avevlad/gdotfiles/internal/constants"
 	"io/ioutil"
 	"os"
 	"path"
@@ -14,6 +15,22 @@ import (
 type File struct {
 	Name   string
 	Folder string
+}
+
+func (f *File) IsGitIgnore() bool {
+	return strings.Contains(f.Name, constants.GitIgnore)
+}
+
+func (f *File) IsGitAttributes() bool {
+	return strings.Contains(f.Name, constants.GitAttributes)
+}
+
+func (f *File) GetFileType() string {
+	if f.IsGitIgnore() {
+		return constants.GitIgnore
+	}
+
+	return constants.GitAttributes
 }
 
 type Files struct {
@@ -46,9 +63,9 @@ func (fls *Files) Read(cfg config.Config) {
 			if !strings.Contains(f.Name(), ".gitignore") && !strings.Contains(f.Name(), ".gitattributes") {
 				continue
 			}
-			len := len(f.Name())
-			if len > maxLength {
-				maxLength = len
+			l := len(f.Name())
+			if l > maxLength {
+				maxLength = l
 			}
 			// fmt.Println(f.Name(), f.Mode().Type())
 			fls.List = append(fls.List, File{Name: f.Name(), Folder: folder})

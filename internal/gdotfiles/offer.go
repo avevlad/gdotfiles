@@ -16,7 +16,8 @@ func offerFoundFile(file File, flags *AppFlags) {
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	fileName := ".gitignore"
+	fileName := "." + file.GetFileType()
+
 	currentGitFile := path.Join(wd, fileName)
 	if _, err := os.Stat(currentGitFile); !os.IsNotExist(err) {
 		data, _ := ioutil.ReadFile(currentGitFile)
@@ -40,7 +41,7 @@ func offerFoundFile(file File, flags *AppFlags) {
 func writeGitFile(file File, isAppend bool) {
 	var (
 		writeContent []byte
-		fileName     = ".gitignore"
+		fileName     = "." + file.GetFileType()
 	)
 	wd, err := os.Getwd()
 	if err != nil {
