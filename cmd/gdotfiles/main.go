@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/avevlad/gdotfiles/internal/build"
 	"github.com/avevlad/gdotfiles/internal/constants"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strings"
 
@@ -24,6 +25,7 @@ func main() {
 	flag.Parse()
 	err := app.Run()
 	if err != nil {
+		log.Fatal().Err(err).Send()
 		os.Exit(1)
 	}
 }
@@ -60,6 +62,7 @@ Options:
 	--from=...        Source (github | toptal | local | alexkaratarakis, default
 	                  github or alexkaratarakis)
 	--verbose         Print all logs output
+	--yes             Automatic yes to prompts
 
 Examples:
 	# Automatic detect project language and choice .gitignore from several options (depends on fzf)

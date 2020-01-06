@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func offerFoundFile(file File) {
+func offerFoundFile(file File, flags *AppFlags) {
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatal().Err(err)
@@ -26,7 +26,10 @@ func offerFoundFile(file File) {
 		}
 		fmt.Println("We found an already existing", currentGitFile, "file")
 		fmt.Println("You can append data to an existing file or replace")
-		prompt := utils.YesOrNoPrompt("Do you want to append selected file to the current "+fileName, true)
+		prompt := true
+		if !flags.Yes {
+			prompt = utils.YesOrNoPrompt("Do you want to append selected file to the current "+fileName, true)
+		}
 
 		writeGitFile(file, prompt)
 		return

@@ -2,6 +2,7 @@ package gdotfiles
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -18,6 +19,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+var errNoFilesFound = errors.New("No files found, try simplifying the arguments")
 
 type App struct {
 	Flags *AppFlags
@@ -50,6 +53,7 @@ type AppFlags struct {
 	Type    string
 	From    string
 	Verbose bool
+	Yes     bool
 }
 
 func (af *AppFlags) RegisterFlags(fs *flag.FlagSet) {
@@ -57,6 +61,7 @@ func (af *AppFlags) RegisterFlags(fs *flag.FlagSet) {
 	fs.StringVar(&af.Type, "type", "", "")
 	fs.StringVar(&af.From, "from", "", "")
 	fs.BoolVar(&af.Verbose, "verbose", false, "")
+	fs.BoolVar(&af.Yes, "yes", false, "")
 
 	fs.Usage = func() {
 		// print(HelpText())
@@ -100,11 +105,10 @@ func (app *App) Run() error {
 	if app.Flags.Name != "" {
 		r := files.FilterByFlags(app.Flags)
 		if r == (File{}) {
-			fmt.Println("No files found, try simplifying the arguments")
-			os.Exit(0)
+			return errNoFilesFound
 		}
-		offerFoundFile(r)
-		os.Exit(0)
+		offerFoundFile(r, app.Flags)
+		return nil
 	}
 
 	var interactiveInput []string
