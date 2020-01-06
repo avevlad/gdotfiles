@@ -62,30 +62,35 @@ func Run() error {
 	appFlags.registerFlags(flag.CommandLine)
 	flag.Parse()
 
-	println(build.Revision)
-	println(build.Version)
+	// println(build.Revision)
+	// println(build.Version)
 
-	fmt.Println("CheckFzfExist", utils.CheckFzfExist())
-	fmt.Println("CheckGitExist", utils.CheckGitExist())
+	// fmt.Println("CheckFzfExist", utils.CheckFzfExist())
+	// fmt.Println("CheckGitExist", utils.CheckGitExist())
 
 	downloadRepos(*cfg)
 	files.Read(*cfg)
 
 	if appFlags.Name != "" {
-		findByFlags(&appFlags, &files)
+		r := files.FilterByFlags(&appFlags)
+		if r == (File{}) {
+			fmt.Println("No files found, try simplifying the arguments")
+			os.Exit(0)
+		}
+		offerFoundFile(r)
 		os.Exit(0)
 	}
-	input := []string{}
+
+	var interactiveInput []string
 
 	for _, v := range files.List {
-		// fmt.Println(v)
-		len := len(v.Name)
-		left := v.Name + files.NameMaxTpl[len-1:]
+		l := len(v.Name)
+		left := v.Name + files.NameMaxTpl[l-1:]
 
-		input = append(input, left+" ["+v.Folder+"]")
+		interactiveInput = append(interactiveInput, left+" ["+v.Folder+"]")
 	}
 
-	runFZF(input)
+	runFZF(interactiveInput)
 
 	fmt.Println("FINISH")
 	return nil
@@ -109,19 +114,6 @@ func runFZF(input []string) string {
 	return bufOut.String()
 }
 
-// gdotfiles --name=Scala --from=github
-// gdotfiles --name=C++ --type=attributes
-// gdotfiles --name=Scala
-func findByFlags(appFlags *AppFlags, files *Files) {
-	r := files.FilterByFlags(appFlags)
-	if r == (File{}) {
-		fmt.Println("No files found, try simplifying the arguments")
-		os.Exit(0)
-	}
-	fmt.Println("r", r)
-	fmt.Println("f", appFlags)
-}
-
 func setupDataDirs() {
 	appDir := utils.UserConfigDir()
 	if err := utils.MakeDirIfNotExists(appDir); err != nil {
@@ -134,7 +126,7 @@ func setupDataDirs() {
 
 func downloadRepos(cfg config.Config) {
 	if _, err := os.Stat(path.Join(utils.UserConfigDir(), "github_gitignore")); !os.IsNotExist(err) {
-		fmt.Println("not the first run")
+		// fmt.Println("not the first run")
 		return
 	}
 

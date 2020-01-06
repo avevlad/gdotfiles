@@ -1,8 +1,6 @@
 package gdotfiles
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -61,8 +59,8 @@ func (fls *Files) Read(cfg config.Config) {
 		fls.NameMaxTpl += " "
 	}
 
-	content, _ := json.Marshal(fls.List)
-	fmt.Println(string(content))
+	//content, _ := json.Marshal(fls.List)
+	//fmt.Println(string(content))
 	// fmt.Println(fls.List[0])
 	// fmt.Println("files", len(fls.List))
 }
