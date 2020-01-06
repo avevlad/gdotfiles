@@ -1,5 +1,5 @@
 GIT_COMMIT=$(shell git rev-parse --short HEAD)
-VERSION=0.1.0
+VERSION=0.2.0
 
 GO_FLAGS += -mod=vendor
 GO_FLAGS += -ldflags="\
@@ -21,3 +21,7 @@ run:
 
 vet:
 	go vet ./cmd/... ./internal/...
+
+bump:
+	git commit -am "Bump version v$(VERSION)"
+	git tag "v$(VERSION)"
