@@ -22,6 +22,12 @@ func CheckBinExist(name string, arg ...string) bool {
 	return err == nil
 }
 
+func ExecCommand(cmd string) []byte {
+	out, _ := exec.Command("bash", "-c", cmd).CombinedOutput()
+
+	return out
+}
+
 func YesOrNoPrompt(question string, defaultValue bool) bool {
 	ynWord := "Y/n"
 	if !defaultValue {

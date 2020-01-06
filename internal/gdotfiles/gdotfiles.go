@@ -104,6 +104,7 @@ func (app *App) Run() error {
 
 	if app.Flags.Name != "" {
 		r := files.FilterByFlags(app.Flags)
+		log.Debug().Msgf("find file %s", r)
 		if r == (File{}) {
 			return errNoFilesFound
 		}
@@ -120,7 +121,7 @@ func (app *App) Run() error {
 		interactiveInput = append(interactiveInput, left+" ["+v.Folder+"]")
 	}
 
-	//runFZF(interactiveInput)
+	runFZF(interactiveInput)
 
 	fmt.Println("FINISH")
 	return nil
