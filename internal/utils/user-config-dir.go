@@ -15,7 +15,7 @@ func UserConfigDir() string {
 	return filepath.Join(dir, constants.AppName)
 }
 
-// 12312312312
+// 3
 func GetCustomGitFilesFolderPath() string {
 	return filepath.Join(UserConfigDir(), constants.CustomFolder)
 }
