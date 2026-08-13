@@ -1,3 +1,5 @@
+
+
 # gdotfiles
 
 Automatic detect project language and choice .gitignore from several options (depends on fzf)
@@ -36,7 +38,7 @@ Examples:
 	# Create C++ .gitattributes file from github.com/alexkaratarakis/gitattributes
 	gdotfiles --name=C++ --type=attributes
 
-	# Create two gitignore templates in one .gitignore file from github.com/github/gitignore
+	# Create Scala .gitignore file using default settings
 	gdotfiles --name=Scala
 
 ```
